@@ -1,7 +1,7 @@
 #define dataPin 10
 #define latchPin 8
 #define clockPin 9
-int binary[] = { 1,2,4,8,16,32,64,128 };			// LED矩阵_行
+int binary[] = { 1,2,4,8,16,32,64,128 };	// LED矩阵_行
 int left_light = 900;				//定义左脚判定条件
 int right_light = 710;				//定义右脚判定条件
 int hand_light = 850;				//定义手掌判定条件
@@ -30,7 +30,7 @@ byte two[8] =
 	B00111100 ,
 	B00111100 ,
 	B00111100 ,
-	B00111100 ,
+	B00000000 ,
 	B00000000 ,
 	B00000000 ,
 	B00000000 ,
@@ -42,8 +42,8 @@ byte three[8] =
 	B01111110 ,
 	B01111110 ,
 	B01111110 ,
-	B01111110 ,
 	B00111100 ,
+	B00000000 ,
 	B00000000 ,
 	B00000000 ,
 	B00000000
@@ -261,76 +261,24 @@ void loop()
 }
 
 
-int RandomBoxComing()      //随机生成箱子
+int RandomBoxComing()			//随机生成箱子
 {
 	int a = random(0, 100);
 	if (a % 2 == 0)				//生成从上方来的方块
 	{
-		for (int i = 0; i < speed; i++)
-		{
-			display(one);
-		}
-		for (int i = 0; i < speed; i++)
-		{
-			display(two);
-		}
-		for (int i = 0; i < speed; i++)
-		{
-			display(three);
-		}
-		for (int i = 0; i < speed; i++)
-		{
-			display(four);
-		}
+			display(one,speed);
+			display(two,speed);
+			display(three,speed);
+			display(four,speed);
 	}
-	else//生成从下方来的方块
+	else						//生成从下方来的方块
 	{
-		for (int i = 0; i < speed; i++)
-		{
-			for (int i = 0; i<8; i++)
-			{
-				digitalWrite(latchPin, LOW);
-				shiftOut(dataPin, clockPin, MSBFIRST, one[7 - i]);
-				shiftOut(dataPin, clockPin, MSBFIRST, ~binary[i]);
-				digitalWrite(latchPin, HIGH);
-				delay(1);
-			}
-		}
-		for (int i = 0; i < speed; i++)
-		{
-			for (int i = 0; i<8; i++)
-			{
-				digitalWrite(latchPin, LOW);
-				shiftOut(dataPin, clockPin, MSBFIRST, two[7 - i]);
-				shiftOut(dataPin, clockPin, MSBFIRST, ~binary[i]);
-				digitalWrite(latchPin, HIGH);
-				delay(1);
-			}
-		}
-		for (int i = 0; i < speed; i++)
-		{
-			for (int i = 0; i<8; i++)
-			{
-				digitalWrite(latchPin, LOW);
-				shiftOut(dataPin, clockPin, MSBFIRST, three[7 - i]);
-				shiftOut(dataPin, clockPin, MSBFIRST, ~binary[i]);
-				digitalWrite(latchPin, HIGH);
-				delay(1);
-			}
-		}
-		for (int i = 0; i < speed; i++)
-		{
-			for (int i = 0; i<8; i++)
-			{
-				digitalWrite(latchPin, LOW);
-				shiftOut(dataPin, clockPin, MSBFIRST, four[7 - i]);
-				shiftOut(dataPin, clockPin, MSBFIRST, ~binary[i]);
-				digitalWrite(latchPin, HIGH);
-				delay(1);
-			}
-		}
+		display_boxDown(one, speed);
+		display_boxDown(two, speed);
+		display_boxDown(three, speed);
+		display_boxDown(four, speed);
 	}
-	return a;
+	return a;					//返回a作为玩家操作的判定条件
 }
 
 void whatShouldPlayerDo(int left, int right)        //玩家技能（跳起或蹲下）
@@ -364,16 +312,46 @@ void whatShouldPlayerDo(int left, int right)        //玩家技能（跳起或蹲下）
 	}
 }
 
-void display(byte dat[8])		//显示模块
+void display(byte dat[8],int del)		//显示模块
 {
-	for (int i = 0; i<8; i++)
+	for (int j = 0; j < del; j++)
 	{
-		digitalWrite(latchPin, LOW);
-		shiftOut(dataPin, clockPin, MSBFIRST, dat[i]);
-		shiftOut(dataPin, clockPin, MSBFIRST, ~binary[i]);
-		digitalWrite(latchPin, HIGH);
-		delay(1);
+		for (int i = 0; i<8; i++)
+		{
+			digitalWrite(latchPin, LOW);
+			shiftOut(dataPin, clockPin, MSBFIRST, dat[i]);
+			shiftOut(dataPin, clockPin, MSBFIRST, ~binary[i]);
+			digitalWrite(latchPin, HIGH);
+			delay(1);
+		}	
 	}
+
+	//清空所有行（事实上是第8行，相当于2.0版本的Clear()函数）
+	digitalWrite(latchPin, LOW);
+	shiftOut(dataPin, clockPin, MSBFIRST, dat[7]);
+	shiftOut(dataPin, clockPin, MSBFIRST, B11111111);
+	digitalWrite(latchPin, HIGH);
+}
+
+void display_boxDown(byte dat[8], int del)		//显示模块
+{
+	for (int j = 0; j < del; j++)
+	{
+		for (int i = 0; i<8; i++)
+		{
+			digitalWrite(latchPin, LOW);
+			shiftOut(dataPin, clockPin, MSBFIRST, dat[7 - i]);
+			shiftOut(dataPin, clockPin, MSBFIRST, ~binary[i]);
+			digitalWrite(latchPin, HIGH);
+			delay(1);
+		}
+	}
+
+	//清空所有行（事实上是第8行，相当于2.0版本的Clear()函数）
+	digitalWrite(latchPin, LOW);
+	shiftOut(dataPin, clockPin, MSBFIRST, dat[7]);
+	shiftOut(dataPin, clockPin, MSBFIRST, B11111111);
+	digitalWrite(latchPin, HIGH);
 }
 
 void game_start()					//游戏开始动画
@@ -393,46 +371,28 @@ void game_start()					//游戏开始动画
 		{
 			blank[i - 16] = B11111111;
 		}
-		for (int k = 0; k < 7; k++)
-		{
-			display(blank);
-		}
+
+		display(blank,7);
 	}
-	for (int k = 0; k < 50; k++)
-	{
-		display(blank);
-	}
+	display(blank,50);
 	for (int i = 0; i < 4; i++)
 	{
 		blank[i + 4] = B00000000;
 		blank[3 - i] = B00000000;
-		for (int k = 0; k < 10; k++)
-		{
-			display(blank);
-		}
+		display(blank,10);
 	}
 	delay(500);
+
 	//321，go
-	for (int i = 0; i < 100; i++)
-	{
-		display(num3);
-	}
+	display(num3,100);
 	delay(300);
-	for (int i = 0; i < 100; i++)
-	{
-		display(num2);
-	}
+	display(num2,100);
 	delay(300);
-	for (int i = 0; i < 100; i++)
-	{
-		display(num1);
-	}
+	display(num1,100);
 	delay(300);
-	for (int i = 0; i < 100; i++)
-	{
-		display(go);
-	}
+	display(go,100);
 	delay(300);
+
 	flag = 2;
 }
 
@@ -490,19 +450,13 @@ void game_end()				//游戏结束计算分数和显示动画
 					blank[0] = B11111111;
 				}
 
-				for (int k = 0; k < 15; k++)
-				{
-					display(blank);
-				}
+				display(blank,15);
 			}
 		}
 	}
 	else
 	{
-		for (int i = 0; i < 80; i++)
-		{
-			display(wrong);
-		}
+		display(wrong,80);
 		delay(500);
 	}
 
@@ -522,65 +476,34 @@ void game_end()				//游戏结束计算分数和显示动画
 		switch (a[2 - i])
 		{
 		case 1:
-			for (int i = 0; i < 150; i++)
-			{
-				display(num1);
-			}
+			display(num1,150);
 			break;
 		case 2:
-			for (int i = 0; i < 150; i++)
-			{
-				display(num2);
-			}
+			display(num2, 150);
 			break;
 		case 3:
-			for (int i = 0; i < 150; i++)
-			{
-				display(num3);
-			}
+			display(num3, 150);
 			break;
 		case 4:
-			for (int i = 0; i <150; i++)
-			{
-				display(num4);
-			}
+			display(num4, 150);
 			break;
 		case 5:
-			for (int i = 0; i < 150; i++)
-			{
-				display(num5);
-			}
+			display(num5, 150);
 			break;
 		case 6:
-			for (int i = 0; i < 150; i++)
-			{
-				display(num6);
-			}
+			display(num6, 150);
 			break;
 		case 7:
-			for (int i = 0; i < 150; i++)
-			{
-				display(num7);
-			}
+			display(num7, 150);
 			break;
 		case 8:
-			for (int i = 0; i < 150; i++)
-			{
-				display(num8);
-			}
+			display(num8, 150);
 			break;
 		case 9:
-			for (int i = 0; i < 150; i++)
-			{
-				display(num9);
-			}
+			display(num9, 150);
 			break;
 		case 0:
-			for (int i = 0; i < 150; i++)
-			{
-				display(num0);
-			}
-			break;
+			display(num0, 150);
 		}
 		delay(300);
 	}
@@ -591,11 +514,6 @@ void game_end()				//游戏结束计算分数和显示动画
 
 void level_pass()			//关卡通关动画
 {
-	for (int i = 0; i < 8; i++)		//初始化blank数组
-	{
-			blank[i] = B00000000;
-	}
-
 	//动画效果
 	for (int k = 0; k < 3; k++)
 	{
@@ -646,34 +564,19 @@ void level_pass()			//关卡通关动画
 				blank[0] = B11111111;
 			}
 
-			for (int k = 0; k < 15; k++)
-			{
-				display(blank);
-			}
+			display(blank,15);
 		}
 	}
 
 	delay(300);
 	//321,go
-	for (int i = 0; i < 100; i++)
-	{
-		display(num3);
-	}
+	display(num3, 100);
 	delay(300);
-	for (int i = 0; i < 100; i++)
-	{
-		display(num2);
-	}
+	display(num2, 100);
 	delay(300);
-	for (int i = 0; i < 100; i++)
-	{
-		display(num1);
-	}
+	display(num1, 100);
 	delay(300);
-	for (int i = 0; i < 100; i++)
-	{
-		display(go);
-	}
+	display(go, 100);
 	delay(300);
 }
 
@@ -772,10 +675,7 @@ void light_adapt()			//光线适应性调整
 			//Serial.println(left_light);
 			break;
 		}
-		for (int i = 0; i < 70; i++)
-		{
-			display(leftFoot);
-		}
+		display(leftFoot,70);
 		delay(200);
 	}
 	while (1)			//测右脚
@@ -789,10 +689,7 @@ void light_adapt()			//光线适应性调整
 			//Serial.println(right_light);
 			break;
 		}
-		for (int i = 0; i < 70; i++)
-		{
-			display(rightFoot);
-		}
+		display(rightFoot, 70);
 		delay(200);
 	}
 	while (1)			//测手掌
@@ -804,11 +701,8 @@ void light_adapt()			//光线适应性调整
 			//Serial.println(hand_light);
 			break;
 		}
-		for (int i = 0; i < 70; i++)
-		{
-			display(hand);
-		}
-		delay(500);
+		display(hand, 70);
+		delay(200);
 	}
 	delay(500);
 }
@@ -841,11 +735,8 @@ void bestScore()			//最高记录以及破纪录动画,在game_over中调用
 					}
 				else arrow[i] = arrow[0];
 			}
-			for (int k = 0; k < 5; k++)
-			{
-				display(arrow);
-			}
-			
+
+			display(arrow,5);
 		}
 	}
 }
