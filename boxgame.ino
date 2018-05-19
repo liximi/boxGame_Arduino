@@ -398,9 +398,9 @@ void game_start()					//游戏开始动画
 
 void game_end()				//游戏结束计算分数和显示动画
 {
+	//判断胜利与否播放不同动画
 	if (score == 440)
 	{
-		//动画效果
 		for (int k = 0; k < 3; k++)
 		{
 			for (int i = 0; i < 5; i++)
@@ -437,7 +437,7 @@ void game_end()				//游戏结束计算分数和显示动画
 					blank[4] = B11000011;
 					blank[5] = B11000011;
 					blank[6] = B11111111;
-					blank[0] = B11111111;
+					blank[7] = B11111111;
 					break;
 				case 4:
 					blank[0] = B11111111;
@@ -447,7 +447,7 @@ void game_end()				//游戏结束计算分数和显示动画
 					blank[4] = B10000001;
 					blank[5] = B10000001;
 					blank[6] = B10000001;
-					blank[0] = B11111111;
+					blank[7] = B11111111;
 				}
 
 				display(blank,15);
@@ -551,7 +551,7 @@ void level_pass()			//关卡通关动画
 				blank[4] = B11000011;
 				blank[5] = B11000011;
 				blank[6] = B11111111;
-				blank[0] = B11111111;
+				blank[7] = B11111111;
 				break;
 			case 4:
 				blank[0] = B11111111;
@@ -561,7 +561,7 @@ void level_pass()			//关卡通关动画
 				blank[4] = B10000001;
 				blank[5] = B10000001;
 				blank[6] = B10000001;
-				blank[0] = B11111111;
+				blank[7] = B11111111;
 			}
 
 			display(blank,15);
@@ -663,16 +663,53 @@ void light_adapt()			//光线适应性调整
 	B00011100
 	};
 	int up, down;
-	int a, b;
+	int l = analogRead(A1);
+	int r = analogRead(A0);
+	int sensitivity_l = 60;
+	int sensitivity_r = 40;
+	int l1, r1;
+
+	//左脚敏感值
+	if (l < 620)
+	{
+		sensitivity_l = 320;
+	}
+	else if (l < 700)
+	{
+		sensitivity_l = 260;
+	}
+	else if (l < 790)
+	{
+		sensitivity_l = 170;
+	}
+	else if (l < 850)
+	{
+		sensitivity_l = 110;
+	}
+
+	//右脚敏感值
+	if (r < 500)
+	{
+		sensitivity_r = 140;
+	}
+	else if (r < 630)
+	{
+		sensitivity_r = 120;
+	}
+	else if (r < 750)
+	{
+		sensitivity_r = 70;
+	}
+
 	while (1)			//测左脚
 	{
-		a = analogRead(A1);
-		delay(300);
-		b = analogRead(A1);
-		if (a - b > 60 || b - a > 60)
+		l1 = analogRead(A1);
+		if (l1 - l > sensitivity_l)
 		{
-			left_light = (a + b) / 2 + 10;
+			Serial.println(l1);
+			left_light = (l1 + l) / 2 + 10;
 			//Serial.println(left_light);
+			display(leftFoot, 120);
 			break;
 		}
 		display(leftFoot,70);
@@ -680,13 +717,13 @@ void light_adapt()			//光线适应性调整
 	}
 	while (1)			//测右脚
 	{
-		a = analogRead(A0);
-		delay(300);
-		b = analogRead(A0);
-		if (a - b > 40 || b - a > 40)
+		r1 = analogRead(A0);
+		if (r1 - r > sensitivity_r)
 		{
-			right_light = (a + b) / 2 + 20;
+			Serial.println(r1);
+			right_light = (r1 + r) / 2 + 20;
 			//Serial.println(right_light);
+			display(rightFoot, 120);
 			break;
 		}
 		display(rightFoot, 70);
@@ -694,11 +731,12 @@ void light_adapt()			//光线适应性调整
 	}
 	while (1)			//测手掌
 	{
-		a = analogRead(A0);
-		if (a - right_light > 110)
+		r1 = analogRead(A0);
+		if (r1 - right_light > 100)
 		{
-			hand_light = a - 80;
+			hand_light = r1 - 80;
 			//Serial.println(hand_light);
+			display(hand, 120);
 			break;
 		}
 		display(hand, 70);
