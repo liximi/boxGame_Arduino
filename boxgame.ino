@@ -1,8 +1,10 @@
+#define dataPin 10
+#define latchPin 8
+#define clockPin 9
+int binary[] = { 1,2,4,8,16,32,64,128 };			// LED矩阵_行
 int left_light = 900;				//定义左脚判定条件
 int right_light = 710;				//定义右脚判定条件
 int hand_light = 850;				//定义手掌判定条件
-int R[] = { 2,3,4,5,10,11,12,13 };	//LED矩阵_行
-int C[] = { 6,7,8,9,A2,A3,A4,A5 };	//LED矩阵_列
 int up_or_down;						//定义 判断玩家所需要进行的操作的条件
 int score = 0;						//定义 玩家分数(也等于 关卡数-1)
 int flag = 1;						//定义 判断游戏是否开始   开始为2  未开始为1
@@ -11,228 +13,225 @@ int best_score = 0;					//定义最高记录
 
 
 //定义箱子的图案
-unsigned char one[8][8] =
+byte one[8] =
 {
-	{ 0,0,0,1,1,0,0,0 },
-	{ 0,0,0,1,1,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 }
+	 B00011000 ,
+	 B00011000 ,
+	 B00000000 ,
+	 B00000000 ,
+	 B00000000 ,
+	 B00000000 ,
+	 B00000000 ,
+	 B00000000 
 };
 
-unsigned char two[8][8] =
+byte two[8] =
 {
-	{ 0,0,1,1,1,1,0,0 },
-	{ 0,0,1,1,1,1,0,0 },
-	{ 0,0,1,1,1,1,0,0 },
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 }
+	B00111100 ,
+	B00111100 ,
+	B00111100 ,
+	B00111100 ,
+	B00000000 ,
+	B00000000 ,
+	B00000000 ,
+	B00000000
 };
 
-unsigned char three[8][8] =
+byte three[8] =
 {
-	{ 0,1,1,1,1,1,1,0 },
-	{ 0,1,1,1,1,1,1,0 },
-	{ 0,1,1,1,1,1,1,0 },
-	{ 0,0,1,1,1,1,0,0 },
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 }
+	B01111110 ,
+	B01111110 ,
+	B01111110 ,
+	B01111110 ,
+	B00111100 ,
+	B00000000 ,
+	B00000000 ,
+	B00000000
 };
 
-unsigned char four[8][8] =
+byte four[8] =
 {
-	{ 1,1,1,1,1,1,1,1 },
-	{ 1,1,1,1,1,1,1,1 },
-	{ 1,1,1,1,1,1,1,1 },
-	{ 1,1,1,1,1,1,1,1 },
-	{ 0,1,1,1,1,1,1,0 },
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 }
+	B11111111 ,
+	B11111111 ,
+	B11111111 ,
+	B11111111 ,
+	B01111110 ,
+	B00000000 ,
+	B00000000 ,
+	B00000000
 };
 
-unsigned char blank[8][8] =		//定义一个可以更改的白板图案
+byte blank[8] =		//定义一个可以更改的白板图案
 {
-{ 0,0,0,0,0,0,0,0 },
-{ 0,0,0,0,0,0,0,0 },
-{ 0,0,0,0,0,0,0,0 },
-{ 0,0,0,0,0,0,0,0 },
-{ 0,0,0,0,0,0,0,0 },
-{ 0,0,0,0,0,0,0,0 },
-{ 0,0,0,0,0,0,0,0 },
-{ 0,0,0,0,0,0,0,0 }
+	B00000000 ,
+	B00000000 ,
+	B00000000 ,
+	B00000000 ,
+	B00000000 ,
+	B00000000 ,
+	B00000000 ,
+	B00000000
 };
 
-unsigned char wrong[8][8] =		//定义“×”图案
+byte wrong[8] =		//定义“×”图案
 {
-{ 1,1,0,0,0,0,1,1 },
-{ 1,1,1,0,0,1,1,1 },
-{ 0,1,1,1,1,1,1,0 },
-{ 0,0,1,0,1,1,0,0 },
-{ 0,0,1,1,0,1,0,0 },
-{ 0,1,1,1,1,1,1,0 },
-{ 1,1,1,0,0,1,1,1 },
-{ 1,1,0,0,0,0,1,1 }
+	B11000011,
+	B11100111,
+	B01111110,
+	B00101100,
+	B00110100,
+	B01111110,
+	B11100111,
+	B11000011
 };
 
-unsigned char go[8][8] =		//定义"go"图案
+byte go[8] =		//定义"go"图案
 {
-	{ 0,0,0,0,0,0,0,0 },
-{ 1,1,1,1,0,1,1,1 },
-{ 1,0,0,1,0,1,0,1 },
-{ 1,0,0,0,0,1,0,1 },
-{ 1,0,1,1,0,1,0,1 },
-{ 1,0,0,1,0,1,0,1 },
-{ 1,1,1,1,0,1,1,1 },
-{ 0,0,0,0,0,0,0,0 }
+	B0000000,
+B11110111,
+B10010101,
+B10000101,
+B10110101,
+B10010101,
+B11110111,
+B00000000
 };
 
 //定义数字图案（1234567890）
-unsigned char num1[8][8] =
+byte num1[8] =
 {
-	{ 0,0,1,1,1,0,0,0 },
-	{ 0,0,1,1,1,0,0,0 },
-	{ 0,0,0,1,1,0,0,0 },
-	{ 0,0,0,1,1,0,0,0 },
-	{ 0,0,0,1,1,0,0,0 },
-	{ 0,0,0,1,1,0,0,0 },
-	{ 0,0,0,1,1,0,0,0 },
-	{ 0,0,1,1,1,1,0,0 }
+	B00111000,
+	B00111000,
+	B00011000,
+	B00011000,
+	B00011000,
+	B00011000,
+	B00011000,
+	B00111100
 };
 
-unsigned char num2[8][8] =
+byte num2[8] =
 {
-	{ 0,1,1,1,1,1,1,0 },
-	{ 0,1,1,1,1,1,1,0 },
-	{ 0,0,0,0,0,1,1,0 },
-	{ 0,0,0,0,0,1,1,0 },
-	{ 0,0,0,1,1,0,0,0 },
-	{ 0,1,1,0,0,0,0,0 },
-	{ 0,1,1,1,1,1,1,0 },
-	{ 0,1,1,1,1,1,1,0 }
+	B01111110,
+	B01111110,
+	B00000110,
+	B00000110,
+	B00011000,
+	B01100000,
+	B01111110,
+	B01111110
 };
 
-unsigned char num3[8][8] =
+byte num3[8] =
 {
-{ 0,1,1,1,1,1,1,0 },
-{ 0,1,1,1,1,1,1,0 },
-{ 0,0,0,0,0,1,1,0 },
-{ 0,1,1,1,1,1,1,0 },
-{ 0,1,1,1,1,1,1,0 },
-{ 0,0,0,0,0,1,1,0 },
-{ 0,1,1,1,1,1,1,0 },
-{ 0,1,1,1,1,1,1,0 }
+B01111110,
+B01111110,
+B00000110,
+B01111110,
+B01111110,
+B00000110,
+B01111110,
+B01111110
 };
 
-unsigned char num4[8][8] =
+byte num4[8] =
 {
-{ 0,0,0,1,1,1,0,0 },
-{ 0,0,1,1,1,1,0,0 },
-{ 0,0,1,0,1,1,0,0 },
-{ 0,1,1,0,1,1,0,0 },
-{ 0,1,1,1,1,1,1,0 },
-{ 0,1,1,1,1,1,1,0 },
-{ 0,0,0,0,1,1,0,0 },
-{ 0,0,0,0,1,1,0,0 }
+B00011100,
+B00111100,
+B00101100,
+B01101100,
+B01111110,
+B01111110,
+B00001100,
+B00001100
 };
 
-unsigned char num5[8][8] =
+byte num5[8] =
 {
-{ 0,1,1,1,1,1,1,0 },
-{ 0,1,1,0,0,0,0,0 },
-{ 0,1,1,0,0,0,0,0 },
-{ 0,1,1,1,1,1,0,0 },
-{ 0,0,0,0,0,1,1,0 },
-{ 0,0,0,0,0,1,1,0 },
-{ 0,0,0,0,0,1,1,0 },
-{ 0,1,1,1,1,1,0,0 }
+B01111110,
+B01100000,
+B01100000,
+B01111100,
+B00000110,
+B00000110,
+B00000110,
+B01111100
 };
 
-unsigned char num6[8][8] =
+byte num6[8] =
 {
-{ 0,1,1,1,1,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,0,0,0,0,0 },
-{ 0,1,1,1,1,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,1,1,1,1,0 }
+B01111110,
+B01100110,
+B01100110,
+B01100000,
+B01111110,
+B01100110,
+B01100110,
+B01111110
 };
 
-unsigned char num7[8][8] =
+byte num7[8] =
 {
-{ 0,1,1,1,1,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,0,0,0,0,1,1,0 },
-{ 0,0,0,0,1,1,0,0 },
-{ 0,0,0,0,1,1,0,0 },
-{ 0,0,0,1,1,0,0,0 },
-{ 0,0,0,1,1,0,0,0 },
-{ 0,0,1,1,0,0,0,0 }
+B01111110,
+B01100110,
+B00000110,
+B00001100,
+B00001100,
+B00011000,
+B00011000,
+B00110000
 };
 
-unsigned char num8[8][8] =
+byte num8[8] =
 {
-{ 0,1,1,1,1,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,1,1,1,1,0 },
-{ 0,1,1,1,1,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,1,1,1,1,0 }
+B01111110,
+B01100110,
+B01100110,
+B01111110,
+B01111110,
+B01100110,
+B01100110,
+B01111110
 };
 
-unsigned char num9[8][8] =
+byte num9[8] =
 {
-{ 0,1,1,1,1,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,1,1,1,1,0 },
-{ 0,0,0,0,0,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,1,1,1,1,0 }
+B01111110,
+B01100110,
+B01100110,
+B01111110,
+B00000110,
+B01100110,
+B01100110,
+B01111110
 };
 
-unsigned char num0[8][8] =
+byte num0[8] =
 {
-{ 0,1,1,1,1,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,0,0,1,1,0 },
-{ 0,1,1,1,1,1,1,0 }
+B01111110,
+B01100110,
+B01100110,
+B01100110,
+B01100110,
+B01100110,
+B01100110,
+B01111110
 };
 
 
 void setup()
 {
-	//循环定义行列PIN 为输出模式  
-	for (int i = 0; i<8; i++)
-	{
-		pinMode(R[i], OUTPUT);
-		pinMode(C[i], OUTPUT);
-	}
+	pinMode(dataPin, OUTPUT);
+	pinMode(latchPin, OUTPUT);
+	pinMode(clockPin, OUTPUT);
 	//Serial.begin(9600);
 	light_adapt();		//测试环境光照
 }
 
 void loop()
 {
-	int left = analogRead(A0);
-	int right = analogRead(A1);
+	int left = analogRead(A1);
+	int right = analogRead(A0);
 	//Serial.print("left=");
 	//Serial.println(left);
 	//Serial.print("right=");
@@ -247,17 +246,17 @@ void loop()
 
 		the_game_difficulty(score);
 		up_or_down = RandomBoxComing();
-		left = analogRead(A0);
-		right = analogRead(A1);
+		left = analogRead(A1);
+		right = analogRead(A0);
 		whatShouldPlayerDo(left, right);
 		if (score == 440)
 		{
-			game_over();		//其实是胜利
+			game_end();		//其实是胜利
 		}
 	}
 	else if (score != 0)
 	{
-		game_over();
+		game_end();
 	}
 }
 
@@ -269,38 +268,66 @@ int RandomBoxComing()      //随机生成箱子
 	{
 		for (int i = 0; i < speed; i++)
 		{
-			displayUp(one);
+			display(one);
 		}
 		for (int i = 0; i < speed; i++)
 		{
-			displayUp(two);
+			display(two);
 		}
 		for (int i = 0; i < speed; i++)
 		{
-			displayUp(three);
+			display(three);
 		}
 		for (int i = 0; i < speed; i++)
 		{
-			displayUp(four);
+			display(four);
 		}
 	}
 	else//生成从下方来的方块
 	{
 		for (int i = 0; i < speed; i++)
 		{
-			displayDown(one);
+			for (int i = 0; i<8; i++)
+			{
+				digitalWrite(latchPin, LOW);
+				shiftOut(dataPin, clockPin, MSBFIRST, one[7 - i]);
+				shiftOut(dataPin, clockPin, MSBFIRST, ~binary[i]);
+				digitalWrite(latchPin, HIGH);
+				delay(1);
+			}
 		}
 		for (int i = 0; i < speed; i++)
 		{
-			displayDown(two);
+			for (int i = 0; i<8; i++)
+			{
+				digitalWrite(latchPin, LOW);
+				shiftOut(dataPin, clockPin, MSBFIRST, two[7 - i]);
+				shiftOut(dataPin, clockPin, MSBFIRST, ~binary[i]);
+				digitalWrite(latchPin, HIGH);
+				delay(1);
+			}
 		}
 		for (int i = 0; i < speed; i++)
 		{
-			displayDown(three);
+			for (int i = 0; i<8; i++)
+			{
+				digitalWrite(latchPin, LOW);
+				shiftOut(dataPin, clockPin, MSBFIRST, three[7 - i]);
+				shiftOut(dataPin, clockPin, MSBFIRST, ~binary[i]);
+				digitalWrite(latchPin, HIGH);
+				delay(1);
+			}
 		}
 		for (int i = 0; i < speed; i++)
 		{
-			displayDown(four);
+			for (int i = 0; i<8; i++)
+			{
+				digitalWrite(latchPin, LOW);
+				shiftOut(dataPin, clockPin, MSBFIRST, four[7 - i]);
+				shiftOut(dataPin, clockPin, MSBFIRST, ~binary[i]);
+				digitalWrite(latchPin, HIGH);
+				delay(1);
+			}
 		}
 	}
 	return a;
@@ -318,7 +345,7 @@ void whatShouldPlayerDo(int left, int right)        //玩家技能（跳起或蹲下）
 		}
 		else//游戏结束
 		{
-			game_over();
+			game_end();
 		}
 	}
 	else        //应跳起
@@ -332,45 +359,20 @@ void whatShouldPlayerDo(int left, int right)        //玩家技能（跳起或蹲下）
 		}
 		else//游戏结束
 		{
-			game_over();
+			game_end();
 		}
 	}
 }
 
-void displayUp(unsigned char dat[8][8])   //显示上方箱子
-{
-	for (int c = 0; c<8; c++)
-	{
-		digitalWrite(C[c], LOW);//选通第c列  
-		for (int r = 0; r<8; r++)
-		{
-			digitalWrite(R[r], dat[r][c]);
-		}
-		delay(1);
-		Clear();  //清空显示去除余晖  
-	}
-}
-
-void displayDown(unsigned char dat[8][8])   //显示下方箱子
-{
-	for (int c = 0; c<8; c++)
-	{
-		digitalWrite(C[c], LOW);//选通第c列  
-		for (int r = 0; r<8; r++)
-		{
-			digitalWrite(R[r], dat[7 - r][c]);
-		}
-		delay(1);
-		Clear();  //清空显示去除余晖  
-	}
-}
-
-void Clear()                          //清空显示
+void display(byte dat[8])		//显示模块
 {
 	for (int i = 0; i<8; i++)
 	{
-		digitalWrite(R[i], LOW);
-		digitalWrite(C[i], HIGH);
+		digitalWrite(latchPin, LOW);
+		shiftOut(dataPin, clockPin, MSBFIRST, dat[i]);
+		shiftOut(dataPin, clockPin, MSBFIRST, ~binary[i]);
+		digitalWrite(latchPin, HIGH);
+		delay(1);
 	}
 }
 
@@ -381,133 +383,116 @@ void game_start()					//游戏开始动画
 	{
 		if (i < 8)
 		{
-			for (int j = 0; j < 8; j++)
-			{
-				blank[i][j] = 1;
-			}
+			blank[i] = B11111111;
 		}
 		else if (i > 5 && i < 16)
 		{
-			for (int j = 0; j < 8; j++)
-				{
-					blank[i - 8][j] = 0;
-				}
+			blank[i - 8] = B00000000;
 		}
 		else if (i > 15)
 		{
-			for (int j = 0; j < 8; j++)
-				{
-					blank[i - 16][j] = 1;
-				}
+			blank[i - 16] = B11111111;
 		}
 		for (int k = 0; k < 7; k++)
 		{
-			displayUp(blank);
+			display(blank);
 		}
 	}
 	for (int k = 0; k < 50; k++)
 	{
-		displayUp(blank);
+		display(blank);
 	}
 	for (int i = 0; i < 4; i++)
 	{
-		for (int j = 0; j < 8; j++)
-		{
-			blank[i + 4][j] = 0;
-			blank[3 - i][j] = 0;
-		}
+		blank[i + 4] = B00000000;
+		blank[3 - i] = B00000000;
 		for (int k = 0; k < 10; k++)
 		{
-			displayUp(blank);
+			display(blank);
 		}
 	}
 	delay(500);
 	//321，go
 	for (int i = 0; i < 100; i++)
-			{
-				displayUp(num3);
-			}
+	{
+		display(num3);
+	}
 	delay(300);
 	for (int i = 0; i < 100; i++)
-			{
-				displayUp(num2);
-			}
+	{
+		display(num2);
+	}
 	delay(300);
 	for (int i = 0; i < 100; i++)
-			{
-				displayUp(num1);
-			}
+	{
+		display(num1);
+	}
 	delay(300);
 	for (int i = 0; i < 100; i++)
-			{
-				displayUp(go);
-			}
+	{
+		display(go);
+	}
 	delay(300);
 	flag = 2;
 }
 
-void game_over()				//游戏结束计算分数和显示动画
+void game_end()				//游戏结束计算分数和显示动画
 {
 	if (score == 440)
 	{
-		for (int i = 0; i < 8; i++)		//初始化blank数组
-		{
-			for (int j = 0; j < 8; j++)
-			{
-				blank[i][j] = 0;
-			}
-		}
-
 		//动画效果
 		for (int k = 0; k < 3; k++)
 		{
 			for (int i = 0; i < 5; i++)
 			{
+				for (int i = 0; i < 8; i++)		//初始化blank数组
+				{
+					blank[i] = B00000000;
+				}
 				switch (i)
 				{
 				case 0:
-					for (int j = 0; j < 8; j++)
-					{
-						blank[0][j] = 0;
-						blank[j][0] = 0;
-						blank[7][j] = 0;
-						blank[j][7] = 0;
-					}
-					blank[3][3] = blank[3][4] = blank[4][3] = blank[4][4] = 1;
+					blank[3] = B00011000;
+					blank[4] = B00011000;
 					break;
 				case 1:
-					blank[2][2] = blank[2][3] = blank[2][4] = blank[2][5] = blank[3][2] =
-						blank[3][5] = blank[4][2] = blank[4][5] = blank[5][2] = blank[5][3] =
-						blank[5][4] = blank[5][5] = 1;
+					blank[2] = B00111100;
+					blank[3] = B00111100;
+					blank[4] = B00111100;
+					blank[5] = B00111100;
 					break;
 				case 2:
-					blank[3][3] = blank[3][4] = blank[4][3] = blank[4][4] = 0;
-					blank[1][1] = blank[1][2] = blank[1][3] = blank[1][4] = blank[1][5] = blank[1][6] =
-						blank[2][1] = blank[2][6] = blank[3][1] = blank[3][6] = blank[4][1] = blank[4][6] =
-						blank[5][1] = blank[5][6] = blank[6][1] = blank[6][2] = blank[6][3] = blank[6][4] =
-						blank[6][5] = blank[6][6] = 1;
+					blank[1] = B01111110;
+					blank[2] = B01111110;
+					blank[3] = B01100110;
+					blank[4] = B01100110;
+					blank[5] = B01111110;
+					blank[6] = B01111110;
 					break;
 				case 3:
-					blank[2][2] = blank[2][3] = blank[2][4] = blank[2][5] = blank[3][2] =
-						blank[3][5] = blank[4][2] = blank[4][5] = blank[5][2] = blank[5][3] =
-						blank[5][4] = blank[5][5] = 0;
-					for (int j = 0; j < 8; j++)
-					{
-						blank[0][j] = 1;
-						blank[j][0] = 1;
-						blank[7][j] = 1;
-						blank[j][7] = 1;
-					}
+					blank[0] = B11111111;
+					blank[1] = B11111111;
+					blank[2] = B11000011;
+					blank[3] = B11000011;
+					blank[4] = B11000011;
+					blank[5] = B11000011;
+					blank[6] = B11111111;
+					blank[0] = B11111111;
 					break;
 				case 4:
-					blank[1][1] = blank[1][2] = blank[1][3] = blank[1][4] = blank[1][5] = blank[1][6] =
-						blank[2][1] = blank[2][6] = blank[3][1] = blank[3][6] = blank[4][1] = blank[4][6] =
-						blank[5][1] = blank[5][6] = blank[6][1] = blank[6][2] = blank[6][3] = blank[6][4] =
-						blank[6][5] = blank[6][6] = 0;
+					blank[0] = B11111111;
+					blank[1] = B10000001;
+					blank[2] = B10000001;
+					blank[3] = B10000001;
+					blank[4] = B10000001;
+					blank[5] = B10000001;
+					blank[6] = B10000001;
+					blank[0] = B11111111;
 				}
+
 				for (int k = 0; k < 15; k++)
 				{
-					displayUp(blank);
+					display(blank);
 				}
 			}
 		}
@@ -516,7 +501,7 @@ void game_over()				//游戏结束计算分数和显示动画
 	{
 		for (int i = 0; i < 80; i++)
 		{
-			displayUp(wrong);
+			display(wrong);
 		}
 		delay(500);
 	}
@@ -539,61 +524,61 @@ void game_over()				//游戏结束计算分数和显示动画
 		case 1:
 			for (int i = 0; i < 150; i++)
 			{
-				displayUp(num1);
+				display(num1);
 			}
 			break;
 		case 2:
 			for (int i = 0; i < 150; i++)
 			{
-				displayUp(num2);
+				display(num2);
 			}
 			break;
 		case 3:
 			for (int i = 0; i < 150; i++)
 			{
-				displayUp(num3);
+				display(num3);
 			}
 			break;
 		case 4:
 			for (int i = 0; i <150; i++)
 			{
-				displayUp(num4);
+				display(num4);
 			}
 			break;
 		case 5:
 			for (int i = 0; i < 150; i++)
 			{
-				displayUp(num5);
+				display(num5);
 			}
 			break;
 		case 6:
 			for (int i = 0; i < 150; i++)
 			{
-				displayUp(num6);
+				display(num6);
 			}
 			break;
 		case 7:
 			for (int i = 0; i < 150; i++)
 			{
-				displayUp(num7);
+				display(num7);
 			}
 			break;
 		case 8:
 			for (int i = 0; i < 150; i++)
 			{
-				displayUp(num8);
+				display(num8);
 			}
 			break;
 		case 9:
 			for (int i = 0; i < 150; i++)
 			{
-				displayUp(num9);
+				display(num9);
 			}
 			break;
 		case 0:
 			for (int i = 0; i < 150; i++)
 			{
-				displayUp(num0);
+				display(num0);
 			}
 			break;
 		}
@@ -608,10 +593,7 @@ void level_pass()			//关卡通关动画
 {
 	for (int i = 0; i < 8; i++)		//初始化blank数组
 	{
-		for (int j = 0; j < 8; j++)
-		{
-			blank[i][j] = 0;
-		}
+			blank[i] = B00000000;
 	}
 
 	//动画效果
@@ -619,51 +601,54 @@ void level_pass()			//关卡通关动画
 	{
 		for (int i = 0; i < 5; i++)
 		{
+			for (int i = 0; i < 8; i++)		//初始化blank数组
+			{
+				blank[i] = B00000000;
+			}
 			switch (i)
 			{
 			case 0:
-				for (int j = 0; j < 8; j++)
-				{
-					blank[0][j] = 0;
-					blank[j][0] = 0;
-					blank[7][j] = 0;
-					blank[j][7] = 0;
-				}
-				blank[3][3] = blank[3][4] = blank[4][3] = blank[4][4] = 1;
+				blank[3] = B00011000;
+				blank[4] = B00011000;
 				break;
 			case 1:
-				blank[2][2] = blank[2][3] = blank[2][4] = blank[2][5] = blank[3][2] =
-					blank[3][5] = blank[4][2] = blank[4][5] = blank[5][2] = blank[5][3] =
-					blank[5][4] = blank[5][5] = 1;
+				blank[2] = B00111100;
+				blank[3] = B00111100;
+				blank[4] = B00111100;
+				blank[5] = B00111100;
 				break;
 			case 2:
-				blank[3][3] = blank[3][4] = blank[4][3] = blank[4][4] = 0;
-				blank[1][1] = blank[1][2] = blank[1][3] = blank[1][4]= blank[1][5] = blank[1][6] =
-					blank[2][1] = blank[2][6] = blank[3][1] = blank[3][6] = blank[4][1] = blank[4][6] =
-					blank[5][1] = blank[5][6] = blank[6][1] = blank[6][2] = blank[6][3] = blank[6][4] =
-					blank[6][5] = blank[6][6] = 1;
+				blank[1] = B01111110;
+				blank[2] = B01111110;
+				blank[3] = B01100110;
+				blank[4] = B01100110;
+				blank[5] = B01111110;
+				blank[6] = B01111110;
 				break;
 			case 3:
-				blank[2][2] = blank[2][3] = blank[2][4] = blank[2][5] = blank[3][2] =
-					blank[3][5] = blank[4][2] = blank[4][5] = blank[5][2] = blank[5][3] =
-					blank[5][4] = blank[5][5] = 0;
-				for (int j = 0; j < 8; j++)
-				{
-					blank[0][j] = 1;
-					blank[j][0] = 1;
-					blank[7][j] = 1;
-					blank[j][7] = 1;
-				}
+				blank[0] = B11111111;
+				blank[1] = B11111111;
+				blank[2] = B11000011;
+				blank[3] = B11000011;
+				blank[4] = B11000011;
+				blank[5] = B11000011;
+				blank[6] = B11111111;
+				blank[0] = B11111111;
 				break;
 			case 4:
-				blank[1][1] = blank[1][2] = blank[1][3] = blank[1][4] = blank[1][5] = blank[1][6] =
-					blank[2][1] = blank[2][6] = blank[3][1] = blank[3][6] = blank[4][1] = blank[4][6] =
-					blank[5][1] = blank[5][6] = blank[6][1] = blank[6][2] = blank[6][3] = blank[6][4] =
-					blank[6][5] = blank[6][6] = 0;
+				blank[0] = B11111111;
+				blank[1] = B10000001;
+				blank[2] = B10000001;
+				blank[3] = B10000001;
+				blank[4] = B10000001;
+				blank[5] = B10000001;
+				blank[6] = B10000001;
+				blank[0] = B11111111;
 			}
+
 			for (int k = 0; k < 15; k++)
 			{
-				displayUp(blank);
+				display(blank);
 			}
 		}
 	}
@@ -672,22 +657,22 @@ void level_pass()			//关卡通关动画
 	//321,go
 	for (int i = 0; i < 100; i++)
 	{
-		displayUp(num3);
+		display(num3);
 	}
 	delay(300);
 	for (int i = 0; i < 100; i++)
 	{
-		displayUp(num2);
+		display(num2);
 	}
 	delay(300);
 	for (int i = 0; i < 100; i++)
 	{
-		displayUp(num1);
+		display(num1);
 	}
 	delay(300);
 	for (int i = 0; i < 100; i++)
 	{
-		displayUp(go);
+		display(go);
 	}
 	delay(300);
 }
@@ -741,46 +726,46 @@ void the_game_difficulty(int level)		//游戏难度控制
 
 void light_adapt()			//光线适应性调整
 {
-	unsigned char leftFoot[8][8] =	
+	byte leftFoot[8] =	
 	{
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,1,1,1,0,0,0,0 },
-	{ 0,1,1,1,0,0,0,0 },
-	{ 0,1,1,1,0,0,0,0 },
-	{ 0,1,1,0,0,0,0,0 },
-	{ 0,1,1,0,0,0,0,0 },
-	{ 0,1,1,0,0,0,0,0 },
-	{ 0,0,0,0,0,0,0,0 }
+	B00000000,
+	B01110000,
+	B01110000,
+	B01110000,
+	B01100000,
+	B01100000,
+	B01100000,
+	B00000000
 	};
-	unsigned char rightFoot[8][8] =
+	byte rightFoot[8] =
 	{
-	{ 0,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,1,1,1,0},
-	{ 0,0,0,0,1,1,1,0 },
-	{ 0,0,0,0,1,1,1,0 },
-	{ 0,0,0,0,0,1,1,0 },
-	{ 0,0,0,0,0,1,1,0 },
-	{ 0,0,0,0,0,1,1,0 },
-	{ 0,0,0,0,0,0,0,0 }
+	B00000000,
+	B00001110,
+	B00001110,
+	B00001110,
+	B00000110,
+	B00000110,
+	B00000110,
+	B00000000
 	};
-	unsigned char hand[8][8] =
+	byte hand[8] =
 	{
-	{ 0,0,0,0,1,0,0,0 },
-	{ 0,0,0,1,1,1,0,0 },
-	{ 0,0,0,1,1,1,1,0 },
-	{ 0,0,0,1,1,1,1,0 },
-	{ 0,1,0,1,1,1,1,0 },
-	{ 0,0,1,1,1,1,1,0 },
-	{ 0,0,1,1,1,1,1,0 },
-	{ 0,0,0,1,1,1,0,0 }
+	B00001000,
+	B00011100,
+	B00011110,
+	B00011110,
+	B01011110,
+	B00111110,
+	B00111110,
+	B00011100
 	};
 	int up, down;
 	int a, b;
 	while (1)			//测左脚
 	{
-		a = analogRead(A0);
+		a = analogRead(A1);
 		delay(300);
-		b = analogRead(A0);
+		b = analogRead(A1);
 		if (a - b > 60 || b - a > 60)
 		{
 			left_light = (a + b) / 2 + 10;
@@ -789,15 +774,15 @@ void light_adapt()			//光线适应性调整
 		}
 		for (int i = 0; i < 70; i++)
 		{
-			displayUp(leftFoot);
+			display(leftFoot);
 		}
 		delay(200);
 	}
 	while (1)			//测右脚
 	{
-		a = analogRead(A1);
+		a = analogRead(A0);
 		delay(300);
-		b = analogRead(A1);
+		b = analogRead(A0);
 		if (a - b > 40 || b - a > 40)
 		{
 			right_light = (a + b) / 2 + 20;
@@ -806,13 +791,13 @@ void light_adapt()			//光线适应性调整
 		}
 		for (int i = 0; i < 70; i++)
 		{
-			displayUp(rightFoot);
+			display(rightFoot);
 		}
 		delay(200);
 	}
 	while (1)			//测手掌
 	{
-		a = analogRead(A1);
+		a = analogRead(A0);
 		if (a - right_light > 110)
 		{
 			hand_light = a - 80;
@@ -821,7 +806,7 @@ void light_adapt()			//光线适应性调整
 		}
 		for (int i = 0; i < 70; i++)
 		{
-			displayUp(hand);
+			display(hand);
 		}
 		delay(500);
 	}
@@ -835,33 +820,30 @@ void bestScore()			//最高记录以及破纪录动画,在game_over中调用
 		best_score = score;
 		
 		//新纪录动画
-		unsigned char arrow[8][8] =		//定义箭头图案
+		byte arrow[8] =		//定义箭头图案
 		{
-		{ 0,0,0,0,0,0,0,0 },
-		{ 0,0,0,0,0,0,0,0 },
-		{ 0,0,0,0,0,0,0,0 },
-		{ 0,0,0,1,1,0,0,0 },
-		{ 0,0,1,1,1,1,0,0 },
-		{ 0,1,1,0,0,1,1,0 },
-		{ 1,1,0,0,0,0,1,1 },
-		{ 1,0,0,0,0,0,0,1 }
+		B00000000,
+		B00000000,
+		B00000000,
+		B00011000,
+		B00111100,
+		B01100110,
+		B11000011,
+		B10000001
 		};
 		for (int k = 0; k < 30; k++)
 		{
 			for(int i = 0; i < 8; i++)
 			{
-				for (int j = 0; j < 8; j++)
-				{
-					if (i < 7)
+				if (i < 7)
 					{
-						arrow[i][j] = arrow[i + 1][j];
+						arrow[i] = arrow[i + 1];
 					}
-					else arrow[i][j] = arrow[0][j];
-				}
+				else arrow[i] = arrow[0];
 			}
 			for (int k = 0; k < 5; k++)
 			{
-				displayUp(arrow);
+				display(arrow);
 			}
 			
 		}
