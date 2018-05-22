@@ -1,6 +1,7 @@
 #define dataPin 10
 #define latchPin 8
 #define clockPin 9
+#define buzzerPin 4					//蜂鸣器IO口
 int binary[] = { 1,2,4,8,16,32,64,128 };	// LED矩阵_行
 int left_light = 900;				//定义左脚判定条件
 int right_light = 710;				//定义右脚判定条件
@@ -224,7 +225,7 @@ void setup()
 	pinMode(dataPin, OUTPUT);
 	pinMode(latchPin, OUTPUT);
 	pinMode(clockPin, OUTPUT);
-	//Serial.begin(9600);
+	Serial.begin(9600);
 	light_adapt();		//测试环境光照
 }
 
@@ -285,8 +286,8 @@ void whatShouldPlayerDo(int left, int right)        //玩家技能（跳起或蹲下）
 {
 	if (up_or_down % 2 == 0)     //应蹲下
 	{
-		//Serial.println(left);
-		//Serial.println(right);
+		Serial.println(left);
+		Serial.println(right);
 		if (left >= left_light && right >= hand_light)
 		{
 			score++;			//分数加一
@@ -298,8 +299,8 @@ void whatShouldPlayerDo(int left, int right)        //玩家技能（跳起或蹲下）
 	}
 	else        //应跳起
 	{
-		//Serial.println(left);
-		//Serial.println(right);
+		Serial.println(left);
+		Serial.println(right);
 		if (left <= left_light && right <= right_light)
 		{
 			score++;			//分数加一
@@ -352,6 +353,22 @@ void display_boxDown(byte dat[8], int del)		//显示模块
 	shiftOut(dataPin, clockPin, MSBFIRST, dat[7]);
 	shiftOut(dataPin, clockPin, MSBFIRST, B11111111);
 	digitalWrite(latchPin, HIGH);
+}
+
+void playsound(int t, int mode = 1, int del = 1000)			//播放声音，分为模式0和模式1，默认为1
+{
+	if (mode)
+	{
+		pinMode(buzzerPin, OUTPUT);
+		tone(buzzerPin, t);
+		delay(del);
+		pinMode(buzzerPin, INPUT);
+	}
+	else
+	{
+		pinMode(buzzerPin, OUTPUT);
+		tone(buzzerPin, t);
+	}
 }
 
 void game_start()					//游戏开始动画
@@ -665,8 +682,11 @@ void light_adapt()			//光线适应性调整
 	int up, down;
 	int l = analogRead(A1);
 	int r = analogRead(A0);
-	int sensitivity_l = 60;
-	int sensitivity_r = 40;
+	int sensitivity_l = 20;
+	int sensitivity_r = 10;
+	int sensitivity_hand = 30;
+	Serial.println(l);
+	Serial.println(r);
 	int l1, r1;
 
 	//左脚敏感值
@@ -684,32 +704,49 @@ void light_adapt()			//光线适应性调整
 	}
 	else if (l < 850)
 	{
-		sensitivity_l = 110;
+		sensitivity_l = 100;
+	}
+	else if (l < 930)
+	{
+		sensitivity_l = 60;
 	}
 
 	//右脚敏感值
 	if (r < 500)
 	{
-		sensitivity_r = 140;
+		sensitivity_r = 120;
+		sensitivity_hand = 130;
 	}
 	else if (r < 630)
 	{
 		sensitivity_r = 120;
+		sensitivity_hand = 110;
 	}
 	else if (r < 750)
 	{
 		sensitivity_r = 70;
+		sensitivity_hand = 100;
+	}
+	else if (r < 850)
+	{
+		sensitivity_r = 30;
+		sensitivity_hand = 70;
 	}
 
 	while (1)			//测左脚
 	{
 		l1 = analogRead(A1);
+		Serial.println(l1);
 		if (l1 - l > sensitivity_l)
 		{
-			Serial.println(l1);
-			left_light = (l1 + l) / 2 + 10;
-			//Serial.println(left_light);
-			display(leftFoot, 120);
+			left_light = (l1 + l) / 2;
+			playsound(800,0);
+			display(leftFoot, 50);
+			pinMode(buzzerPin, INPUT);
+			delay(200);
+			playsound(800, 0);
+			display(leftFoot, 50);
+			pinMode(buzzerPin, INPUT);
 			break;
 		}
 		display(leftFoot,70);
@@ -718,12 +755,17 @@ void light_adapt()			//光线适应性调整
 	while (1)			//测右脚
 	{
 		r1 = analogRead(A0);
+		Serial.println(r1);
 		if (r1 - r > sensitivity_r)
 		{
-			Serial.println(r1);
-			right_light = (r1 + r) / 2 + 20;
-			//Serial.println(right_light);
-			display(rightFoot, 120);
+			right_light = (r1 + r) / 2 + 10;
+			playsound(800,0);
+			display(rightFoot, 50);
+			pinMode(buzzerPin, INPUT);
+			delay(200);
+			playsound(800, 0);
+			display(rightFoot, 50);
+			pinMode(buzzerPin, INPUT);
 			break;
 		}
 		display(rightFoot, 70);
@@ -732,11 +774,18 @@ void light_adapt()			//光线适应性调整
 	while (1)			//测手掌
 	{
 		r1 = analogRead(A0);
-		if (r1 - right_light > 100)
+		Serial.println(r1);
+		if (r1 - right_light > sensitivity_hand)
 		{
-			hand_light = r1 - 80;
-			//Serial.println(hand_light);
-			display(hand, 120);
+			hand_light = r1 - sensitivity_hand;
+			Serial.println(hand_light);
+			playsound(800,0);
+			display(hand, 50);
+			pinMode(buzzerPin, INPUT);
+			delay(200);
+			playsound(800, 0);
+			display(hand, 50);
+			pinMode(buzzerPin, INPUT);
 			break;
 		}
 		display(hand, 70);
@@ -778,3 +827,4 @@ void bestScore()			//最高记录以及破纪录动画,在game_over中调用
 		}
 	}
 }
+
