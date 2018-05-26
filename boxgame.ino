@@ -101,7 +101,7 @@ B00000000
 //定义数字图案（1234567890）
 byte num1[8] =
 {
-	B00111000,
+	B00011000,
 	B00111000,
 	B00011000,
 	B00011000,
@@ -220,12 +220,42 @@ B01111110
 };
 
 
+void playsound(int t, int mode = 1, int del = 1000)			//播放声音，分为模式0\1\2，默认为1
+{
+	if (mode == 1)
+	{
+		pinMode(buzzerPin, OUTPUT);
+		tone(buzzerPin, t);
+		delay(del);
+		pinMode(buzzerPin, INPUT);
+	}
+	else if (mode == 0)
+	{
+		pinMode(buzzerPin, OUTPUT);
+		tone(buzzerPin, t);
+	}
+	else if (mode == 2)
+	{
+		pinMode(buzzerPin, OUTPUT);
+		for (int i = 0; i < 15; i++)
+		{
+			tone(buzzerPin, t += 20);
+			delay(20);
+		}
+		pinMode(buzzerPin, INPUT);
+	}
+}
+
+
 void setup()
 {
 	pinMode(dataPin, OUTPUT);
 	pinMode(latchPin, OUTPUT);
 	pinMode(clockPin, OUTPUT);
-	Serial.begin(9600);
+	playsound(900, 1, 300);		//开机提示音
+	delay(300);
+	playsound(900, 1, 300);
+	//Serial.begin(9600);
 	light_adapt();		//测试环境光照
 }
 
@@ -249,8 +279,9 @@ void loop()
 		up_or_down = RandomBoxComing();
 		left = analogRead(A1);
 		right = analogRead(A0);
+		delay(200);
 		whatShouldPlayerDo(left, right);
-		if (score == 440)
+		if (score == 260)
 		{
 			game_end();		//其实是胜利
 		}
@@ -262,58 +293,7 @@ void loop()
 }
 
 
-int RandomBoxComing()			//随机生成箱子
-{
-	int a = random(0, 100);
-	if (a % 2 == 0)				//生成从上方来的方块
-	{
-			display(one,speed);
-			display(two,speed);
-			display(three,speed);
-			display(four,speed);
-	}
-	else						//生成从下方来的方块
-	{
-		display_boxDown(one, speed);
-		display_boxDown(two, speed);
-		display_boxDown(three, speed);
-		display_boxDown(four, speed);
-	}
-	return a;					//返回a作为玩家操作的判定条件
-}
-
-void whatShouldPlayerDo(int left, int right)        //玩家技能（跳起或蹲下）
-{
-	if (up_or_down % 2 == 0)     //应蹲下
-	{
-		Serial.println(left);
-		Serial.println(right);
-		if (left >= left_light && right >= hand_light)
-		{
-			score++;			//分数加一
-		}
-		else//游戏结束
-		{
-			game_end();
-		}
-	}
-	else        //应跳起
-	{
-		Serial.println(left);
-		Serial.println(right);
-		if (left <= left_light && right <= right_light)
-		{
-			score++;			//分数加一
-			delay(700);			//等待玩家跳起后落脚
-		}
-		else//游戏结束
-		{
-			game_end();
-		}
-	}
-}
-
-void display(byte dat[8],int del)		//显示模块
+void display(byte dat[8], int del)		//显示模块
 {
 	for (int j = 0; j < del; j++)
 	{
@@ -324,7 +304,7 @@ void display(byte dat[8],int del)		//显示模块
 			shiftOut(dataPin, clockPin, MSBFIRST, ~binary[i]);
 			digitalWrite(latchPin, HIGH);
 			delay(1);
-		}	
+		}
 	}
 
 	//清空所有行（事实上是第8行，相当于2.0版本的Clear()函数）
@@ -355,19 +335,61 @@ void display_boxDown(byte dat[8], int del)		//显示模块
 	digitalWrite(latchPin, HIGH);
 }
 
-void playsound(int t, int mode = 1, int del = 1000)			//播放声音，分为模式0和模式1，默认为1
+
+int RandomBoxComing()			//随机生成箱子
 {
-	if (mode)
+	int a = random(0, 999);
+	if (a % 2 == 0)				//生成从上方来的方块
 	{
-		pinMode(buzzerPin, OUTPUT);
-		tone(buzzerPin, t);
-		delay(del);
+		display(one,speed);
+		display(two,speed);
+		display(three,speed);
+		playsound(300, 0);
+		display(four, 4 * speed / 5);
 		pinMode(buzzerPin, INPUT);
 	}
-	else
+	else						//生成从下方来的方块
 	{
-		pinMode(buzzerPin, OUTPUT);
-		tone(buzzerPin, t);
+		display_boxDown(one, speed);
+		display_boxDown(two, speed);
+		display_boxDown(three, speed);
+		playsound(300, 0);
+		display_boxDown(four, 4 * speed / 5);
+		pinMode(buzzerPin, INPUT);
+	}
+	return a;					//返回a作为玩家操作的判定条件
+}
+
+void whatShouldPlayerDo(int left, int right)        //玩家技能（跳起或蹲下）
+{
+	if (up_or_down % 2 == 0)     //应蹲下
+	{
+		//Serial.println(left);
+		//Serial.println(right);
+		if (left >= left_light && right >= hand_light)
+		{
+			playsound(100, 2);
+			score++;			//分数加一
+		}
+		else//游戏结束
+		{
+			game_end();
+		}
+	}
+	else        //应跳起
+	{
+		//Serial.println(left);
+		//Serial.println(right);
+		if (left <= left_light && right <= right_light)
+		{
+			playsound(100, 2);
+			score++;			//分数加一
+			//delay(100);			//等待玩家跳起后落脚
+		}
+		else//游戏结束
+		{
+			game_end();
+		}
 	}
 }
 
@@ -416,7 +438,7 @@ void game_start()					//游戏开始动画
 void game_end()				//游戏结束计算分数和显示动画
 {
 	//判断胜利与否播放不同动画
-	if (score == 440)
+	if (score == 260)
 	{
 		for (int k = 0; k < 3; k++)
 		{
@@ -477,7 +499,7 @@ void game_end()				//游戏结束计算分数和显示动画
 		delay(500);
 	}
 
-	//拆分分数（max = 440）的每一位数值  并显示分数
+	//拆分分数（max = 260）的每一位数值  并显示分数
 	int a[3];
 	int b = score;
 	for (int i = 0; i < 3; i++)
@@ -602,42 +624,43 @@ void the_game_difficulty(int level)		//游戏难度控制
 	switch (level)
 	{
 	case 8:
-		level_pass();
-		break;
-	case 24:
-		speed = 90;
-		level_pass();
-		break;
-	case 48:
 		speed = 80;
 		level_pass();
 		break;
-	case 80:
+	case 20:
+		speed = 75;
+		level_pass();
+		break;
+	case 36:
 		speed = 70;
 		level_pass();
 		break;
-	case 120:
+	case 56:
+		speed = 65;
+		level_pass();
+		break;
+	case 80:
 		speed = 60;
 		level_pass();
 		break;
-	case 168:
+	case 108:
 		speed = 55;
 		level_pass();
 		break;
-	case 224:
+	case 140:
 		speed = 50;
 		level_pass();
 		break;
-	case 288:
+	case 176:
 		speed = 45;
 		level_pass();
 		break;
-	case 360:
+	case 216:
 		speed = 40;
 		level_pass();
 		break;
-	case 410:
-		speed = 30;
+	case 246:
+		speed = 35;
 		break;
 	default:
 		break;
@@ -685,8 +708,8 @@ void light_adapt()			//光线适应性调整
 	int sensitivity_l = 20;
 	int sensitivity_r = 10;
 	int sensitivity_hand = 30;
-	Serial.println(l);
-	Serial.println(r);
+	//Serial.println(l);
+	//Serial.println(r);
 	int l1, r1;
 
 	//左脚敏感值
@@ -717,14 +740,14 @@ void light_adapt()			//光线适应性调整
 		sensitivity_r = 120;
 		sensitivity_hand = 130;
 	}
-	else if (r < 630)
+	else if (r < 625)
 	{
-		sensitivity_r = 120;
+		sensitivity_r = 75;
 		sensitivity_hand = 110;
 	}
 	else if (r < 750)
 	{
-		sensitivity_r = 70;
+		sensitivity_r = 50;
 		sensitivity_hand = 100;
 	}
 	else if (r < 850)
@@ -736,15 +759,15 @@ void light_adapt()			//光线适应性调整
 	while (1)			//测左脚
 	{
 		l1 = analogRead(A1);
-		Serial.println(l1);
+		//Serial.println(l1);
 		if (l1 - l > sensitivity_l)
 		{
 			left_light = (l1 + l) / 2;
-			playsound(800,0);
+			playsound(700,0);
 			display(leftFoot, 50);
 			pinMode(buzzerPin, INPUT);
 			delay(200);
-			playsound(800, 0);
+			playsound(700, 0);
 			display(leftFoot, 50);
 			pinMode(buzzerPin, INPUT);
 			break;
@@ -755,15 +778,15 @@ void light_adapt()			//光线适应性调整
 	while (1)			//测右脚
 	{
 		r1 = analogRead(A0);
-		Serial.println(r1);
+		//Serial.println(r1);
 		if (r1 - r > sensitivity_r)
 		{
 			right_light = (r1 + r) / 2 + 10;
-			playsound(800,0);
+			playsound(700,0);
 			display(rightFoot, 50);
 			pinMode(buzzerPin, INPUT);
 			delay(200);
-			playsound(800, 0);
+			playsound(700, 0);
 			display(rightFoot, 50);
 			pinMode(buzzerPin, INPUT);
 			break;
@@ -774,16 +797,16 @@ void light_adapt()			//光线适应性调整
 	while (1)			//测手掌
 	{
 		r1 = analogRead(A0);
-		Serial.println(r1);
+		//Serial.println(r1);
 		if (r1 - right_light > sensitivity_hand)
 		{
 			hand_light = r1 - sensitivity_hand;
 			Serial.println(hand_light);
-			playsound(800,0);
+			playsound(700,0);
 			display(hand, 50);
 			pinMode(buzzerPin, INPUT);
 			delay(200);
-			playsound(800, 0);
+			playsound(700, 0);
 			display(hand, 50);
 			pinMode(buzzerPin, INPUT);
 			break;
