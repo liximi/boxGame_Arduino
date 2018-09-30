@@ -632,7 +632,9 @@ div.WordSection1
 </head>
 
 <body lang=ZH-CN style='tab-interval:21.0pt;text-justify-trim:punctuation'>
-
+<p>
+源文件以及README.dox和README.pdf 位于 分支 3.0版本
+</p>
 <div class=WordSection1 style='layout-grid:15.6pt'>
 
 <h1 style='margin:0cm;margin-bottom:.0001pt;line-height:normal'><span
